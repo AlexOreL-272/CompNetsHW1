@@ -1,0 +1,121 @@
+Starting logging...
+===> (Thread-3 (run)) (2024-04-23 18:16:04.335787) 
+
+New iteration 0
+
+===> (Thread-3 (run)) (2024-04-23 18:16:07.472502) 
+
+New iteration 1000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:10.373580) 
+
+New iteration 2000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:13.641917) 
+
+New iteration 3000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:16.981427) 
+
+New iteration 4000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:19.924829) 
+
+New iteration 5000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:23.287486) 
+
+New iteration 6000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:26.326345) 
+
+New iteration 7000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:29.466424) 
+
+New iteration 8000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:32.429396) 
+
+New iteration 9000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:35.450790) 
+
+New iteration 10000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:38.503915) 
+
+New iteration 11000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:41.444951) 
+
+New iteration 12000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:44.196414) 
+
+New iteration 13000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:47.596783) 
+
+New iteration 14000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:50.453735) 
+
+New iteration 15000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:53.212147) 
+
+New iteration 16000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:56.440948) 
+
+New iteration 17000
+
+===> (Thread-3 (run)) (2024-04-23 18:16:59.568936) 
+
+New iteration 18000
+
+===> (Thread-3 (run)) (2024-04-23 18:17:03.148501) 
+
+New iteration 19000
+
+===> (Thread-3 (run)) (2024-04-23 18:17:06.430076) 
+
+New iteration 20000
+
+===> (Thread-3 (run)) (2024-04-23 18:17:09.551873) 
+
+New iteration 21000
+
+===> (Thread-3 (run)) (2024-04-23 18:17:13.004028) 
+
+New iteration 22000
+
+===> (Thread-3 (run)) (2024-04-23 18:17:16.053519) 
+
+New iteration 23000
+
+===> (Thread-3 (run)) (2024-04-23 18:17:18.877908) 
+
+New iteration 24000
+
+===> (Thread-3 (run)) (2024-04-23 18:17:21.672899) 
+
+New iteration 25000
+
+===> (Thread-3 (run)) (2024-04-23 18:17:24.705368) 
+
+New iteration 26000
+
+===> (Thread-3 (run)) (2024-04-23 18:17:27.523964) 
+
+New iteration 27000
+
+===> (Thread-3 (run)) (2024-04-23 18:17:30.130408) 
+
+New iteration 28000
+
+===> (Thread-3 (run)) (2024-04-23 18:17:33.127367) 
+
+New iteration 29000
+
