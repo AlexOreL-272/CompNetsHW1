@@ -1,9 +1,10 @@
-import queue
 from batcher import Batch
 from globals import Globals
 from logger import Logger
+from sortedcontainers import SortedList
 import time
 import threading
+import queue
 
 import socket
 
@@ -40,7 +41,7 @@ class MyTCPProtocol(UDPBasedProtocol):
         self.ack_queue = queue.PriorityQueue()
         
         # self.recv_batches = set()
-        self.recv_batches = []
+        self.recv_batches = SortedList()
         # self.recv_batches = queue.PriorityQueue()
 
         self.logger = Logger("log.txt")
@@ -70,7 +71,6 @@ class MyTCPProtocol(UDPBasedProtocol):
             batch = Batch(self.seq_num, self.seq_num + kBatchSize,
                           data[processed_size:kEndIdx], "MSG")
             batches.append(batch)
-            # self.ack_num = self.seq_num + kBatchSize
 
             self.seq_num += kBatchSize
             processed_size += kBatchSize
@@ -121,12 +121,8 @@ class MyTCPProtocol(UDPBasedProtocol):
                 if "ACK" not in flags:
                     continue
 
-                while not self.ack_queue.empty():
-                    batch = self.ack_queue.queue[0]
-                    if response.ack_num >= batch.ack_num:
-                        self.ack_queue.get()
-                    else:
-                        break
+                while not self.ack_queue.empty() and response.ack_num >= self.ack_queue.queue[0].ack_num:
+                    self.ack_queue.get()
 
             except TimeoutError:
                 for batch in self.ack_queue.queue:
@@ -171,20 +167,20 @@ class MyTCPProtocol(UDPBasedProtocol):
                 if "MSG" not in flags:
                     continue
 
-                self.recv_batches.append(response)
+                self.recv_batches.add(response)
+                # self.recv_batches.append(response)
             except TimeoutError:
                 continue
                 # self.__send_ack(self.ack_num)
             except Exception as e:
                 raise e
 
-            self.recv_batches.sort()
+            # self.recv_batches.sort()
             while len(self.recv_batches) > 0:
                 front = self.recv_batches[0]
 
                 if self.ack_num >= front.seq_num:
                     if self.ack_num == front.seq_num:
-                        # idk why this does not work with 
                         self.ack_num = front.ack_num
                         received += front.data
 
