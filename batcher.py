@@ -1,4 +1,5 @@
 from globals import Globals
+from datetime import datetime
 
 
 class TCPFlags:
@@ -84,10 +85,13 @@ class Batch:
             `flags`: (*string) flags of the batch
         """
 
-        self.flags = TCPFlags(*flags)
-        self.seq_num = seq_num
-        self.ack_num = ack_num
-        self.data = data
+        self.__flags = TCPFlags(*flags)     # TCP flags of the batch
+        self.seq_num = seq_num              # sequence number of the batch
+        self.ack_num = ack_num              # acknowledgement number of the batch
+        self.data = data                    # data to be sent
+
+        self.acked = False                  # is the batch acknowledged?
+        self.__send_time = datetime.now()   # time when the batch was sent
 
     @classmethod
     def decode(cls, data, byteorder="big"):
@@ -113,7 +117,7 @@ class Batch:
         ack_num = int.from_bytes(data[from_idx:to_idx], byteorder)
 
         new_batch = cls(seq_num, ack_num, data[to_idx:])
-        new_batch.flags = flags
+        new_batch.__flags = flags
 
         return new_batch
 
@@ -126,7 +130,7 @@ class Batch:
             `return`: (bytes) encoded batch
         """
 
-        return self.flags.getFlags().to_bytes(self.kCharsForType, byteorder) + \
+        return self.__flags.getFlags().to_bytes(self.kCharsForType, byteorder) + \
             self.seq_num.to_bytes(self.kCharsForSeqNum, byteorder) + \
             self.ack_num.to_bytes(self.kCharsForAckNum, byteorder) + \
             self.data
@@ -138,7 +142,24 @@ class Batch:
             `return`: (list[string]) flags
         """
 
-        return self.flags.decodeFlags()
+        return self.__flags.decodeFlags()
+
+    def needsToBeResent(self):
+        """
+            Check if the batch needs to be resent
+
+            `return`: (bool) True if the batch needs to be resent
+        """
+
+        return not self.acked and (datetime.now() - self.__send_time) > Globals.kTimeout
+
+    def prepareForResend(self):
+        """
+            Mark the batch non acknowledged and update the send time
+        """
+
+        self.acked = False
+        self.__send_time = datetime.now()
 
     def __lt__(self, other):
         """
@@ -156,7 +177,7 @@ class Batch:
             Get string representation of batch
         """
 
-        result = " | ".join(self.flags.decodeFlags())
+        result = " | ".join(self.__flags.decodeFlags())
         result += f": {self.seq_num} : {self.ack_num}; {str(self.data)}"
 
         return result

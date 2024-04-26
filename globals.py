@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+
 class Globals:
     """
         Class for global variables
@@ -8,12 +11,22 @@ class Globals:
     # max amount of bytes that fit into channel
     kBatchSize = 2 ** 16
 
+    # amount of batches in the TCP window
+    kBatchesInWindow = 10
+    # respective TCP window size
+    kWindowSize = kBatchesInWindow * kBatchSize
+
+    # max TCP header size
     kMaxTCPHeaderSize = 60
+    # max amount of data bytes that can be sent in one batch
     kDataSize = kBatchSize - kHeaderSize - kMaxTCPHeaderSize
+
+    # time to wait for send/receive operations
+    kTimeout = timedelta(milliseconds=10)
 
     # TCP flag bits (!DO NOT MODIFY!)
     kTCPFlagBits = {
-        "MSG": 0,   # There is no MSG flag in TCP, but it is for better understanding
+        "MSG": 0,   # There is no MSG flag in TCP, but it is for better understanding and logging
         "URG": 1,   # NOT IMPLEMENTED
         "ACK": 2,
         "PSH": 4,   # NOT IMPLEMENTED
