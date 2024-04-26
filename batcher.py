@@ -158,7 +158,7 @@ class Batch:
             Mark the batch non acknowledged and update the send time
         """
 
-        self.acked = False
+        # self.acked = False
         self.__send_time = datetime.now()
 
     def __lt__(self, other):
@@ -178,6 +178,13 @@ class Batch:
         """
 
         result = " | ".join(self.__flags.decodeFlags())
-        result += f": {self.seq_num} : {self.ack_num}; {str(self.data)}"
+        result += f": {self.seq_num} : {self.ack_num}; "
+
+        if len(self.data) > Globals.kLogMaxSize:
+            result += f"{str(self.data[:Globals.kLogMaxSize])}..."
+        else:
+            result += f"{str(self.data)}"
+
+        # result += f": {self.seq_num} : {self.ack_num}; b\"...\""
 
         return result

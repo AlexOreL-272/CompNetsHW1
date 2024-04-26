@@ -37,11 +37,11 @@ class MyTCPProtocol(UDPBasedProtocol):
         # ack_num of latest batch aknowledged
         self.ack_num = 0
         # amount of bytes received
-        self.recieved_bytes_amt = 0
+        self.received_bytes_amt = 0
 
         # acknoledgement queue
         self.ack_queue = queue.PriorityQueue()
-        # 
+        # queue for received batches
         self.recv_queue = queue.PriorityQueue()
         
         # buffer for received data
@@ -75,6 +75,24 @@ class MyTCPProtocol(UDPBasedProtocol):
 
         return batches
 
+    def __recv_front(self):
+        """
+            Get front batch from the receive queue
+
+            `return`: (Batch) front batch
+        """
+
+        return self.recv_queue.queue[0] if not self.recv_queue.empty() else None
+
+    def __ack_front(self):
+        """
+            Get front batch from the acknoledgement queue
+
+            `return`: (Batch) front batch
+        """
+
+        return self.ack_queue.queue[0] if not self.ack_queue.empty() else None
+
     def __send_batch(self, batch):
         """
             Send a batch
@@ -103,9 +121,8 @@ class MyTCPProtocol(UDPBasedProtocol):
         # no need to receive ACK on ACK
         if "ACK" not in flags:
             batch.prepareForResend()
-            self.ack_queue.put((batch.seq_num, batch), block=False)
+            self.ack_queue.put(batch, block=False)
 
-        # now assume that len(batch.data) == bytes_sent
         return bytes_sent
 
     def __send_ack(self, seq_num, ack_num):
@@ -118,7 +135,14 @@ class MyTCPProtocol(UDPBasedProtocol):
         if Globals.log:
             self.logger.log(f"SEND: Sending ACK batch ({ack_batch})")
 
-        self.__send_batch(ack_batch)
+        try:
+            # not to be zero, include header
+            bytes_sent = self.__send_batch(ack_batch) + Globals.kHeaderSize
+            bytes_sent = self.__send_batch(ack_batch) + Globals.kHeaderSize
+        except Exception as e:
+            raise e
+
+        return bytes_sent
 
     def __wait_for_batch(self):
         try:
@@ -132,29 +156,39 @@ class MyTCPProtocol(UDPBasedProtocol):
 
         # if it is a message
         if "MSG" in flags:
-            self.recv_queue.put((response.seq_num, response), block=False)
-            queue_nonempty = not self.recv_queue.empty()
+            # add received batch to the queue
+            self.recv_queue.put(response, block=False)
 
+            # while there are received batches and
+            # front batch's seq_num corresponds to order
             while not self.recv_queue.empty() and \
-                self.recieved_bytes_amt >= self.recv_queue.queue[0][1].seq_num:
-                _, front = self.recv_queue.get(block=False)
+                self.received_bytes_amt >= self.__recv_front().seq_num:
+                # if it is greater, it is most likely a duplicate 
+                
+                # pop front batch
+                front = self.recv_queue.get(block=False)
+                # mark as acknowledged
                 front.acked = True
 
-                if front.seq_num == self.recieved_bytes_amt:
+                # if front batch is the next in the order
+                # update recieved data
+                if front.seq_num == self.received_bytes_amt:
                     self.recv_buffer += front.data
-                    self.recieved_bytes_amt += len(front.data)
+                    self.received_bytes_amt += len(front.data)
 
-            if queue_nonempty:
-                try:
-                    self.__send_ack(self.seq_num, self.recieved_bytes_amt)
-                except Exception as e:
-                    raise e
-            
+            # try to send ACK on received batch
+            try:
+                self.__send_ack(self.seq_num, self.received_bytes_amt)
+            except Exception as e:
+                raise e
+
+        # if we got response batch with greater ack_num
+        # update last acknowledged number
         if response.ack_num > self.ack_num:
             self.ack_num = response.ack_num
             
-            while not self.ack_queue.empty() and \
-                self.ack_queue.queue[0][0] < self.ack_num:
+            # pop all acknowledged batches
+            while not self.ack_queue.empty() and self.__ack_front().seq_num < self.ack_num:
                 self.ack_queue.get(block=False)
 
     def __resend_first(self):
@@ -162,36 +196,40 @@ class MyTCPProtocol(UDPBasedProtocol):
             Resend the first batch in the acknoledgement queue
         """
 
+        # if there is no batches to resend or
+        # first batch not ready to be resend
         if self.ack_queue.empty() or \
-            not self.ack_queue.queue[0][1].needsToBeResent():
+            not self.__ack_front().needsToBeResent():
             return
 
         try:
-            self.__send_batch(self.ack_queue.get(block=False)[1])
+            self.__send_batch(self.ack_queue.get(block=False))
         except Exception as e:
             raise e
 
     def send(self, data: bytes):
         if Globals.log:
-            self.logger.log(f"SEND: Sending {data}")
+            self.logger.log(f"SEND: Sending {data[:Globals.kLogMaxSize]}")
 
         kInputSize = len(data)
         bytes_sent = 0
-        # batches = self.__split(data)
 
+        # while we have not sent all batches or
+        # there are sent and not acknowledged batches
         while bytes_sent != kInputSize or self.ack_num < self.seq_num:
             # if we have not sent all batches and there is some space in the window 
             if bytes_sent < kInputSize and self.seq_num - self.ack_num <= Globals.kWindowSize:
                 # make batch to send
                 kEndIdx = min(bytes_sent + Globals.kDataSize, kInputSize)
-                kBatchToSend = Batch(self.seq_num, self.recieved_bytes_amt, data[bytes_sent:kEndIdx], "MSG")
+                kBatchToSend = Batch(self.seq_num, self.received_bytes_amt, data[bytes_sent:kEndIdx], "MSG")
 
                 # send the batch
                 bytes_sent += self.__send_batch(kBatchToSend)
-            
-            # try to receive an ACK
+
             try:
+                # try to receive an ACK (or message)
                 self.__wait_for_batch()
+                # try to resend first unacked batch
                 self.__resend_first()
             except Exception as e:
                 raise e
@@ -202,6 +240,7 @@ class MyTCPProtocol(UDPBasedProtocol):
         if Globals.log:
             self.logger.log(f"RECV: Receiving {n} bytes")
 
+        # get data from receive buffer
         end_idx = min(n, len(self.recv_buffer))
         received = self.recv_buffer[:end_idx]
         self.recv_buffer = self.recv_buffer[end_idx:]
@@ -212,6 +251,7 @@ class MyTCPProtocol(UDPBasedProtocol):
             except Exception as e:
                 raise e
 
+            # get data from receive buffer
             end_idx = min(n, len(self.recv_buffer))
             received += self.recv_buffer[:end_idx]
             self.recv_buffer = self.recv_buffer[end_idx:]

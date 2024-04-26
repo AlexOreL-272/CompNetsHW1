@@ -29,5 +29,5 @@ class Logger:
         self.mu.acquire()
         with open(self.filename, "a") as f:
             f.write(
-                f"===> ({threading.current_thread().name}) ({datetime.now()}) {msg}\n")
+                f"===> ({threading.current_thread().name}) ({datetime.now()}) {msg} <===\n")
         self.mu.release()

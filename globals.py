@@ -12,7 +12,7 @@ class Globals:
     kBatchSize = 2 ** 16
 
     # amount of batches in the TCP window
-    kBatchesInWindow = 10
+    kBatchesInWindow = 20
     # respective TCP window size
     kWindowSize = kBatchesInWindow * kBatchSize
 
@@ -35,4 +35,5 @@ class Globals:
         "FIN": 32   # NOT IMPLEMENTED
     }
 
+    kLogMaxSize = 0
     log = False
