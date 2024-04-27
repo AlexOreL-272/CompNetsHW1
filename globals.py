@@ -11,11 +11,6 @@ class Globals:
     # max amount of bytes that fit into channel
     kBatchSize = 2 ** 16
 
-    # amount of batches in the TCP window
-    kBatchesInWindow = 20
-    # respective TCP window size
-    kWindowSize = kBatchesInWindow * kBatchSize
-
     # max TCP header size
     kMaxTCPHeaderSize = 60
     # max amount of data bytes that can be sent in one batch
@@ -35,5 +30,5 @@ class Globals:
         "FIN": 32   # NOT IMPLEMENTED
     }
 
-    kLogMaxSize = 0
+    kLogMaxSize = 10
     log = False

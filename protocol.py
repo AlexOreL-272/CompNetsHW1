@@ -217,8 +217,8 @@ class MyTCPProtocol(UDPBasedProtocol):
         # while we have not sent all batches or
         # there are sent and not acknowledged batches
         while bytes_sent != kInputSize or self.ack_num < self.seq_num:
-            # if we have not sent all batches and there is some space in the window 
-            if bytes_sent < kInputSize and self.seq_num - self.ack_num <= Globals.kWindowSize:
+            # if we have not sent all batches
+            if bytes_sent < kInputSize:
                 # make batch to send
                 kEndIdx = min(bytes_sent + Globals.kDataSize, kInputSize)
                 kBatchToSend = Batch(self.seq_num, self.received_bytes_amt, data[bytes_sent:kEndIdx], "MSG")
